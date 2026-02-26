@@ -70,3 +70,17 @@ book-portrait:
 ```
 
 If PlaceholderAPI is not installed, the template is used literally (with `{player}` replacement only).
+
+## French Learning Website (static demo)
+
+A standalone website is available in `website/` with:
+- CEFR curriculum mode and GCSE curriculum switch.
+- Adaptive quiz questions with immediate error explanations when answers are wrong.
+- Dedicated rule pages for grammar, agreement, tenses, and conjugation.
+
+Run locally:
+
+```bash
+python3 -m http.server 4173 --directory website
+```
+Then open `http://localhost:4173`.

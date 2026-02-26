@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FrenchPath - CEFR & GCSE French Learning</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">FrenchPath</p>
+      <h1>Learn French with CEFR structure, GCSE mode, and instant mistake explanations</h1>
+      <p>
+        Build your French step by step with guided curriculum pathways, grammar deep-dives,
+        and practice questions that explain exactly why each wrong answer is incorrect.
+      </p>
+    </div>
+    <div class="mode-switcher">
+      <label for="track">Curriculum Track</label>
+      <select id="track">
+        <option value="cefr">CEFR French</option>
+        <option value="gcse">GCSE French</option>
+      </select>
+      <p id="track-description"></p>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>Curriculum Roadmap</h2>
+      <div id="roadmap" class="card-grid"></div>
+    </section>
+
+    <section>
+      <h2>Knowledge Hub</h2>
+      <div class="card-grid quick-links">
+        <a class="card" href="grammar.html">
+          <h3>Core Grammar Rules</h3>
+          <p>Nouns, sentence order, negation, and common structures.</p>
+        </a>
+        <a class="card" href="agreement.html">
+          <h3>Agreement Essentials</h3>
+          <p>Gender, number, adjective placement, and participle agreement.</p>
+        </a>
+        <a class="card" href="tenses.html">
+          <h3>Tenses Masterclass</h3>
+          <p>Present, perfect, imperfect, future, conditional, and subjunctive.</p>
+        </a>
+        <a class="card" href="conjugation.html">
+          <h3>Conjugation Patterns</h3>
+          <p>Regular and irregular verbs with memory rules and stem changes.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="quiz-section">
+      <div>
+        <h2>Adaptive Practice Quiz</h2>
+        <p>
+          Questions change with your selected curriculum. Submit each answer to see immediate
+          feedback and a clear explanation if you get it wrong.
+        </p>
+      </div>
+      <button id="next-question" type="button">New Question</button>
+
+      <article id="quiz-card" class="quiz-card">
+        <p class="topic" id="question-topic"></p>
+        <h3 id="question-text"></h3>
+        <div id="options" class="options"></div>
+        <div class="controls">
+          <button id="submit-answer" type="button">Check Answer</button>
+        </div>
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <p>FrenchPath © 2026 · Structured French learning from beginner to advanced</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
