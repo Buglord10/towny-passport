@@ -74,8 +74,10 @@ If PlaceholderAPI is not installed, the template is used literally (with `{playe
 ## French Learning Website (static demo)
 
 A standalone website is available in `website/` with:
-- CEFR curriculum mode and GCSE curriculum switch.
-- Adaptive quiz questions with immediate error explanations when answers are wrong.
+- A Duolingo-style unit path for both CEFR and GCSE French.
+- A placement quiz to estimate starting level.
+- Account creation/login and local progress saving (XP, streak, completed units, placement).
+- Lesson quiz feedback that explains mistakes and provides correct answers.
 - Dedicated rule pages for grammar, agreement, tenses, and conjugation.
 
 Run locally:
