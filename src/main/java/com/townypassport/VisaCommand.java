@@ -31,8 +31,8 @@ public class VisaCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            player.sendMessage(ChatColor.YELLOW + "/visa apply <town|nation> <name> <age> <sex> [notes]");
-            player.sendMessage(ChatColor.YELLOW + "/visa issue <player> <town|nation> <name> <age> <sex> [notes]");
+            player.sendMessage(ChatColor.YELLOW + "/visa apply <town|nation> <authorityName> <age> <sex> [notes]");
+            player.sendMessage(ChatColor.YELLOW + "/visa issue <player> <town|nation> <authorityName> <age> <sex> [notes]");
             player.sendMessage(ChatColor.YELLOW + "/visa approve <applicationId>");
             return true;
         }
@@ -40,7 +40,7 @@ public class VisaCommand implements CommandExecutor, TabCompleter {
         String sub = args[0].toLowerCase(Locale.ROOT);
         if (sub.equals("apply")) {
             if (args.length < 5) {
-                player.sendMessage(ChatColor.YELLOW + "Usage: /visa apply <town|nation> <name> <age> <sex> [notes]");
+                player.sendMessage(ChatColor.YELLOW + "Usage: /visa apply <town|nation> <authorityName> <age> <sex> [notes]");
                 return true;
             }
             PassportRecord.AuthorityType type = parseAuthority(args[1]);
@@ -60,8 +60,8 @@ public class VisaCommand implements CommandExecutor, TabCompleter {
         }
 
         if (sub.equals("issue")) {
-            if (args.length < 7) {
-                player.sendMessage(ChatColor.YELLOW + "Usage: /visa issue <player> <town|nation> <name> <age> <sex> [notes]");
+            if (args.length < 6) {
+                player.sendMessage(ChatColor.YELLOW + "Usage: /visa issue <player> <town|nation> <authorityName> <age> <sex> [notes]");
                 return true;
             }
             PassportRecord.AuthorityType type = parseAuthority(args[2]);

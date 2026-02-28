@@ -72,7 +72,8 @@ public class PassportService {
             return null;
         }
 
-        double fee = plugin.getConfig().getDouble(documentType == PassportRecord.DocumentType.PASSPORT ? "fees.passport" : "fees.visa", 250.0);
+        double defaultFee = documentType == PassportRecord.DocumentType.PASSPORT ? 250.0 : 50.0;
+        double fee = plugin.getConfig().getDouble(documentType == PassportRecord.DocumentType.PASSPORT ? "fees.passport" : "fees.visa", defaultFee);
         if (!charge(payer, fee)) {
             return null;
         }
@@ -101,13 +102,15 @@ public class PassportService {
         return record;
     }
 
-    public PassportRecord approveApplication(String appId, Player payer) {
+    public PassportRecord approveApplication(String appId, Player approver) {
         PassportApplication app = store.getApplications().get(appId);
         if (app == null) {
             return null;
         }
 
         OfflinePlayer target = plugin.getServer().getOfflinePlayer(app.getApplicant());
+        Player payer = plugin.getConfig().getBoolean("fees.charge-on-approval", false) ? approver : null;
+
         PassportRecord record = issueDocument(
                 app.getDocumentType(),
                 target,
@@ -127,13 +130,77 @@ public class PassportService {
         return record;
     }
 
-
     public PassportApplication getApplication(String appId) {
         return store.getApplications().get(appId);
     }
 
     public List<PassportRecord> getPassports(UUID playerId) {
         return store.getPassports(playerId);
+    }
+
+    public PassportRecord findDocument(String documentId) {
+        return store.findDocumentById(documentId);
+    }
+
+    public boolean revokeDocument(String documentId) {
+        PassportRecord removed = store.removeDocumentById(documentId);
+        if (removed == null) {
+            return false;
+        }
+        store.save();
+        return true;
+    }
+
+    public PassportRecord renewDocument(String documentId, int days) {
+        PassportRecord existing = store.findDocumentById(documentId);
+        if (existing == null || days <= 0) {
+            return null;
+        }
+        Instant base = existing.getExpiresAt().isAfter(Instant.now()) ? existing.getExpiresAt() : Instant.now();
+        PassportRecord updated = existing.withExpiry(base.plus(days, ChronoUnit.DAYS));
+        if (!store.replaceDocument(updated)) {
+            return null;
+        }
+        store.save();
+        return updated;
+    }
+
+    public void ensureTownOwnerStarterPassport(Player player) {
+        if (!plugin.getConfig().getBoolean("starter-passport-town-owner.enabled", true)) {
+            return;
+        }
+
+        String townName = townyHook.getTownForPlayer(player);
+        if (townName == null || !townyHook.isTownOwner(player, townName)) {
+            return;
+        }
+
+        boolean hasTownPassport = getPassports(player.getUniqueId()).stream()
+                .anyMatch(doc -> doc.getDocumentType() == PassportRecord.DocumentType.PASSPORT
+                        && doc.getAuthorityType() == PassportRecord.AuthorityType.TOWN
+                        && doc.getAuthorityName().equalsIgnoreCase(townName));
+
+        if (hasTownPassport) {
+            return;
+        }
+
+        int defaultAge = plugin.getConfig().getInt("starter-passport-town-owner.default-age", 18);
+        String defaultSex = plugin.getConfig().getString("starter-passport-town-owner.default-sex", "Unspecified");
+        String defaultNotes = plugin.getConfig().getString("starter-passport-town-owner.default-notes", "Issued automatically to town owner");
+        if (defaultSex == null || defaultSex.isBlank()) defaultSex = "Unspecified";
+        if (defaultNotes == null || defaultNotes.isBlank()) defaultNotes = "Issued automatically to town owner";
+
+        issueDocument(
+                PassportRecord.DocumentType.PASSPORT,
+                player,
+                player.getName() == null ? "Unknown" : player.getName(),
+                defaultAge,
+                defaultSex,
+                defaultNotes,
+                PassportRecord.AuthorityType.TOWN,
+                townName,
+                null
+        );
     }
 
     public List<PassportApplication> getApplicationsForAuthority(PassportRecord.AuthorityType type, String authorityName) {
@@ -159,11 +226,8 @@ public class PassportService {
 
     private boolean passportAllowsTownEntry(PassportRecord record, String townName, String townNation) {
         if (record.getAuthorityType() == PassportRecord.AuthorityType.TOWN) {
-            // Town passport allows entry only to that specific town.
             return record.getAuthorityName().equalsIgnoreCase(townName);
         }
-
-        // Nation passport allows entry to any town inside that nation.
         return townNation != null && record.getAuthorityName().equalsIgnoreCase(townNation);
     }
 

@@ -30,8 +30,7 @@ public class TownyHook {
         }
         try {
             Class<?> townyApiClass = Class.forName("com.palmergames.bukkit.towny.TownyAPI");
-            Method getInstance = townyApiClass.getMethod("getInstance");
-            Object api = getInstance.invoke(null);
+            Object api = townyApiClass.getMethod("getInstance").invoke(null);
             Method getNation = townyApiClass.getMethod("getNation", String.class);
             return getNation.invoke(api, nationName) != null;
         } catch (ReflectiveOperationException ex) {
@@ -46,15 +45,12 @@ public class TownyHook {
         }
         try {
             Class<?> townyApiClass = Class.forName("com.palmergames.bukkit.towny.TownyAPI");
-            Method getInstance = townyApiClass.getMethod("getInstance");
-            Object api = getInstance.invoke(null);
-            Method getTownMethod = townyApiClass.getMethod("getTown", Location.class);
-            Object town = getTownMethod.invoke(api, location);
+            Object api = townyApiClass.getMethod("getInstance").invoke(null);
+            Object town = townyApiClass.getMethod("getTown", Location.class).invoke(api, location);
             if (town == null) {
                 return null;
             }
-            Method getName = town.getClass().getMethod("getName");
-            return (String) getName.invoke(town);
+            return (String) town.getClass().getMethod("getName").invoke(town);
         } catch (ReflectiveOperationException ex) {
             plugin.getLogger().warning("Failed resolving town at location: " + ex.getMessage());
             return null;
@@ -68,28 +64,79 @@ public class TownyHook {
         }
 
         try {
-            Method hasNation = town.getClass().getMethod("hasNation");
-            boolean inNation = (boolean) hasNation.invoke(town);
+            boolean inNation = (boolean) town.getClass().getMethod("hasNation").invoke(town);
             if (!inNation) {
                 return null;
             }
 
-            Object nation = null;
+            Object nation;
             try {
                 nation = town.getClass().getMethod("getNation").invoke(town);
             } catch (NoSuchMethodException ignored) {
                 nation = town.getClass().getMethod("getNationOrNull").invoke(town);
             }
-
             if (nation == null) {
                 return null;
             }
-
-            Method getName = nation.getClass().getMethod("getName");
-            return (String) getName.invoke(nation);
+            return (String) nation.getClass().getMethod("getName").invoke(nation);
         } catch (ReflectiveOperationException ex) {
             plugin.getLogger().warning("Failed fetching nation for town " + townName + ": " + ex.getMessage());
             return null;
+        }
+    }
+
+    public String getTownForPlayer(Player player) {
+        if (!isTownyAvailable()) {
+            return null;
+        }
+        try {
+            Class<?> townyApiClass = Class.forName("com.palmergames.bukkit.towny.TownyAPI");
+            Object api = townyApiClass.getMethod("getInstance").invoke(null);
+            Object resident;
+            try {
+                resident = townyApiClass.getMethod("getResident", org.bukkit.OfflinePlayer.class).invoke(api, player);
+            } catch (NoSuchMethodException ignored) {
+                resident = townyApiClass.getMethod("getResident", org.bukkit.entity.Player.class).invoke(api, player);
+            }
+            if (resident == null) {
+                return null;
+            }
+            Object town;
+            try {
+                town = resident.getClass().getMethod("getTownOrNull").invoke(resident);
+            } catch (NoSuchMethodException ignored) {
+                town = resident.getClass().getMethod("getTown").invoke(resident);
+            }
+            if (town == null) {
+                return null;
+            }
+            return (String) town.getClass().getMethod("getName").invoke(town);
+        } catch (ReflectiveOperationException ex) {
+            plugin.getLogger().warning("Failed resolving player's town: " + ex.getMessage());
+            return null;
+        }
+    }
+
+    public boolean isTownOwner(Player player, String townName) {
+        Object town = getTownObject(townName);
+        if (town == null) {
+            return false;
+        }
+        try {
+            Object mayor = town.getClass().getMethod("getMayor").invoke(town);
+            if (mayor == null) {
+                return false;
+            }
+            try {
+                Object mayorUuid = mayor.getClass().getMethod("getUUID").invoke(mayor);
+                return mayorUuid instanceof java.util.UUID && ((java.util.UUID) mayorUuid).equals(player.getUniqueId());
+            } catch (NoSuchMethodException ignored) {
+                Object mayorPlayer = mayor.getClass().getMethod("getPlayer").invoke(mayor);
+                return mayorPlayer instanceof Player && ((Player) mayorPlayer).getUniqueId().equals(player.getUniqueId());
+            }
+        } catch (ReflectiveOperationException ex) {
+            plugin.getLogger().warning("Failed town owner check: " + ex.getMessage());
+            return false;
         }
     }
 
@@ -97,7 +144,8 @@ public class TownyHook {
         if (player.hasPermission("townypassport.issue.town.*") || player.hasPermission("townypassport.admin")) {
             return true;
         }
-        return player.hasPermission("townypassport.issue.town." + townName.toLowerCase());
+        return player.hasPermission("townypassport.issue.town." + townName.toLowerCase())
+                || isTownOwner(player, townName);
     }
 
     public boolean canIssueNationDocuments(Player player, String nationName) {
@@ -114,10 +162,8 @@ public class TownyHook {
 
         try {
             Class<?> townyApiClass = Class.forName("com.palmergames.bukkit.towny.TownyAPI");
-            Method getInstance = townyApiClass.getMethod("getInstance");
-            Object api = getInstance.invoke(null);
-            Method getTownMethod = townyApiClass.getMethod("getTown", String.class);
-            return getTownMethod.invoke(api, townName);
+            Object api = townyApiClass.getMethod("getInstance").invoke(null);
+            return townyApiClass.getMethod("getTown", String.class).invoke(api, townName);
         } catch (ReflectiveOperationException ex) {
             plugin.getLogger().warning("Failed town lookup: " + ex.getMessage());
             return null;

@@ -15,6 +15,7 @@ import org.bukkit.inventory.meta.BookMeta;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -52,6 +53,10 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
             case "approve" -> handleApprove(player, args);
             case "applications" -> handleApplications(player, args);
             case "view" -> handleView(player, args);
+            case "list" -> handleList(player, args);
+            case "search" -> handleSearch(player, args);
+            case "renew" -> handleRenew(player, args);
+            case "revoke" -> handleRevoke(player, args);
             default -> sendUsage(player);
         }
         return true;
@@ -59,7 +64,7 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
 
     private void handleApply(Player player, String[] args) {
         if (args.length < 5) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /passport apply <town|nation> <name> <age> <sex> [notes]");
+            player.sendMessage(ChatColor.YELLOW + "Usage: /passport apply <town|nation> <authorityName> <age> <sex> [notes]");
             return;
         }
 
@@ -75,7 +80,7 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        String notes = args.length > 5 ? String.join(" ", java.util.Arrays.copyOfRange(args, 5, args.length)) : "None";
+        String notes = args.length > 5 ? String.join(" ", Arrays.copyOfRange(args, 5, args.length)) : "None";
         PassportApplication app = service.createApplication(player, PassportRecord.DocumentType.PASSPORT, type, args[2], age, args[4], notes);
         if (app == null) {
             player.sendMessage(ChatColor.RED + "Target authority does not exist in Towny.");
@@ -86,8 +91,8 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleIssue(Player player, String[] args, PassportRecord.DocumentType docType) {
-        if (args.length < 7) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /passport issue <player> <town|nation> <name> <age> <sex> [notes]");
+        if (args.length < 6) {
+            player.sendMessage(ChatColor.YELLOW + "Usage: /passport issue <player> <town|nation> <authorityName> <age> <sex> [notes]");
             return;
         }
 
@@ -110,7 +115,7 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        String notes = args.length > 6 ? String.join(" ", java.util.Arrays.copyOfRange(args, 6, args.length)) : "None";
+        String notes = args.length > 6 ? String.join(" ", Arrays.copyOfRange(args, 6, args.length)) : "None";
         String holderName = target.getName() == null ? args[1] : target.getName();
 
         PassportRecord record = service.issueDocument(docType, target, holderName, age, args[5], notes, type, authorityName, player);
@@ -151,7 +156,7 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
 
     private void handleApplications(Player player, String[] args) {
         if (args.length < 3) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /passport applications <town|nation> <name>");
+            player.sendMessage(ChatColor.YELLOW + "Usage: /passport applications <town|nation> <authorityName>");
             return;
         }
 
@@ -230,6 +235,73 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.GREEN + "Opened document " + (index + 1) + " of " + docs.size() + ".");
     }
 
+    private void handleList(Player player, String[] args) {
+        OfflinePlayer target = args.length > 1 ? Bukkit.getOfflinePlayer(args[1]) : player;
+        List<PassportRecord> docs = service.getPassports(target.getUniqueId());
+        if (docs.isEmpty()) {
+            player.sendMessage(ChatColor.RED + "No documents found for " + target.getName());
+            return;
+        }
+        player.sendMessage(ChatColor.GOLD + "Documents for " + target.getName() + ":");
+        for (PassportRecord doc : docs) {
+            player.sendMessage(ChatColor.GRAY + "- " + doc.getDocumentId() + " | " + doc.getDocumentType().name()
+                    + " | " + doc.getAuthorityType().name() + " " + doc.getAuthorityName()
+                    + " | expires " + FORMATTER.format(doc.getExpiresAt()));
+        }
+    }
+
+    private void handleSearch(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage(ChatColor.YELLOW + "Usage: /passport search <documentId>");
+            return;
+        }
+        PassportRecord doc = service.findDocument(args[1]);
+        if (doc == null) {
+            player.sendMessage(ChatColor.RED + "Document not found.");
+            return;
+        }
+        player.sendMessage(ChatColor.GREEN + "Found " + doc.getDocumentId() + " for " + doc.getHolderName()
+                + " (" + doc.getAuthorityType().name() + " " + doc.getAuthorityName() + ")");
+    }
+
+    private void handleRenew(Player player, String[] args) {
+        if (!player.hasPermission("townypassport.admin")) {
+            player.sendMessage(ChatColor.RED + "Only admins can renew documents.");
+            return;
+        }
+        if (args.length < 3) {
+            player.sendMessage(ChatColor.YELLOW + "Usage: /passport renew <documentId> <days>");
+            return;
+        }
+        int days = parseAge(args[2]);
+        if (days <= 0) {
+            player.sendMessage(ChatColor.RED + "Days must be a positive number.");
+            return;
+        }
+        PassportRecord updated = service.renewDocument(args[1], days);
+        if (updated == null) {
+            player.sendMessage(ChatColor.RED + "Could not renew document.");
+            return;
+        }
+        player.sendMessage(ChatColor.GREEN + "Renewed " + updated.getDocumentId() + " until " + FORMATTER.format(updated.getExpiresAt()));
+    }
+
+    private void handleRevoke(Player player, String[] args) {
+        if (!player.hasPermission("townypassport.admin")) {
+            player.sendMessage(ChatColor.RED + "Only admins can revoke documents.");
+            return;
+        }
+        if (args.length < 2) {
+            player.sendMessage(ChatColor.YELLOW + "Usage: /passport revoke <documentId>");
+            return;
+        }
+        if (!service.revokeDocument(args[1])) {
+            player.sendMessage(ChatColor.RED + "Document not found.");
+            return;
+        }
+        player.sendMessage(ChatColor.GREEN + "Revoked document " + args[1]);
+    }
+
     private PassportRecord.AuthorityType parseAuthority(String input) {
         if (input.equalsIgnoreCase("town")) {
             return PassportRecord.AuthorityType.TOWN;
@@ -256,11 +328,15 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendUsage(Player player) {
-        player.sendMessage(ChatColor.YELLOW + "/passport apply <town|nation> <name> <age> <sex> [notes]");
-        player.sendMessage(ChatColor.YELLOW + "/passport issue <player> <town|nation> <name> <age> <sex> [notes]");
-        player.sendMessage(ChatColor.YELLOW + "/passport applications <town|nation> <name>");
+        player.sendMessage(ChatColor.YELLOW + "/passport apply <town|nation> <authorityName> <age> <sex> [notes]");
+        player.sendMessage(ChatColor.YELLOW + "/passport issue <player> <town|nation> <authorityName> <age> <sex> [notes]");
+        player.sendMessage(ChatColor.YELLOW + "/passport applications <town|nation> <authorityName>");
         player.sendMessage(ChatColor.YELLOW + "/passport approve <applicationId>");
         player.sendMessage(ChatColor.YELLOW + "/passport view [player] [index]");
+        player.sendMessage(ChatColor.YELLOW + "/passport list [player]");
+        player.sendMessage(ChatColor.YELLOW + "/passport search <documentId>");
+        player.sendMessage(ChatColor.YELLOW + "/passport renew <documentId> <days> (admin)");
+        player.sendMessage(ChatColor.YELLOW + "/passport revoke <documentId> (admin)");
     }
 
     @Override
@@ -272,6 +348,10 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
             list.add("applications");
             list.add("approve");
             list.add("view");
+            list.add("list");
+            list.add("search");
+            list.add("renew");
+            list.add("revoke");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("apply") || args[0].equalsIgnoreCase("issue") || args[0].equalsIgnoreCase("applications"))) {
             list.add("town");
             list.add("nation");

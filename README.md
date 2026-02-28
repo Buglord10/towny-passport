@@ -6,39 +6,46 @@ TownyPassport is a Paper/Spigot plugin that adds roleplay-style identity documen
 
 - **Vault** for charging issuance fees.
 - **Towny** for validating towns/nations and enforcing border entry rules.
+- Optional: **PlaceholderAPI** for in-book portrait placeholders.
 
 ## What it does
 
 - Nations and towns can issue **passports** and **visas**.
 - Players can apply for passports/visas and officials can approve applications.
+- Town owners (mayors) can automatically receive an initial town passport on join/enable.
 - Viewing documents opens a **written book** with identity info:
-  - Optional portrait integration in books via PlaceholderAPI-compatible portrait placeholders using free plugin setups (for example SkinsRestorer placeholders or free glyph packs).
-  - Name
-  - Age (provided during application/issuance)
-  - Sex
-  - Issuing authority
-  - Issue/expiry dates
-  - Notes
+  - Optional portrait placeholders using free plugin setups.
+  - Name, age, sex, authority, issue/expiry, notes.
 - Border enforcement: players can only enter a town if they hold:
   - A valid passport issued by that **town**, or
   - A valid passport issued by that town's **nation**.
 - Entry scope rules:
   - A **nation passport** grants access to all towns in that nation.
-  - A **town passport** grants access only to that one town (not other towns in the nation).
+  - A **town passport** grants access only to that one town.
 
 ## Commands
 
 ### Passport
-- `/passport apply <town|nation> <authorityName> <age> <sex> [notes]`
-- `/passport issue <player> <town|nation> <authorityName> <age> <sex> [notes]`
-- `/passport applications <town|nation> <authorityName>`
-- `/passport approve <applicationId>`
-- `/passport view [player] [index]`
+Use the namespaced command to avoid command conflicts with other plugins:
+- `/townypassport apply <town|nation> <authorityName> <age> <sex> [notes]`
+- `/townypassport issue <player> <town|nation> <authorityName> <age> <sex> [notes]`
+- `/townypassport applications <town|nation> <authorityName>`
+- `/townypassport approve <applicationId>`
+- `/townypassport view [player] [index]`
+- `/townypassport list [player]`
+- `/townypassport search <documentId>`
+- `/townypassport renew <documentId> <days>` (admin)
+- `/townypassport revoke <documentId>` (admin)
+
+Legacy aliases still work if not taken by another plugin: `/passport`, `/tpassport`.
 
 ### Visa
-- `/visa apply <town|nation> <authorityName> <age> <sex> [notes]`
-- `/visa issue <player> <town|nation> <authorityName> <age> <sex> [notes]`
-- `/visa approve <applicationId>`
+Use the namespaced command to avoid conflicts:
+- `/townyvisa apply <town|nation> <authorityName> <age> <sex> [notes]`
+- `/townyvisa issue <player> <town|nation> <authorityName> <age> <sex> [notes]`
+- `/townyvisa approve <applicationId>`
+
+Legacy aliases still work if free: `/visa`, `/tvisa`.
 
 ## Permissions
 
@@ -48,6 +55,16 @@ TownyPassport is a Paper/Spigot plugin that adds roleplay-style identity documen
 - or per-authority dynamic nodes:
   - `townypassport.issue.town.<townname>`
   - `townypassport.issue.nation.<nationname>`
+
+## Config highlights
+
+```yml
+fees:
+  charge-on-approval: false
+
+starter-passport-town-owner:
+  enabled: true
+```
 
 ## Build
 

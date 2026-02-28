@@ -68,4 +68,20 @@ public class PassportRecord {
     public boolean isValidAt(Instant time) {
         return expiresAt.isAfter(time);
     }
+
+    public PassportRecord withExpiry(Instant newExpiry) {
+        return new PassportRecord(
+                documentId,
+                owner,
+                holderName,
+                age,
+                sex,
+                notes,
+                authorityType,
+                authorityName,
+                documentType,
+                issuedAt,
+                newExpiry
+        );
+    }
 }

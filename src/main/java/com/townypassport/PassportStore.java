@@ -27,11 +27,50 @@ public class PassportStore {
     }
 
     public List<PassportRecord> getPassports(UUID uuid) {
-        return passportsByPlayer.getOrDefault(uuid, new ArrayList<>());
+        return new ArrayList<>(passportsByPlayer.getOrDefault(uuid, new ArrayList<>()));
     }
 
     public void addPassport(PassportRecord passport) {
         passportsByPlayer.computeIfAbsent(passport.getOwner(), ignored -> new ArrayList<>()).add(passport);
+    }
+
+    public PassportRecord findDocumentById(String documentId) {
+        for (List<PassportRecord> records : passportsByPlayer.values()) {
+            for (PassportRecord record : records) {
+                if (record.getDocumentId().equalsIgnoreCase(documentId)) {
+                    return record;
+                }
+            }
+        }
+        return null;
+    }
+
+    public boolean replaceDocument(PassportRecord updated) {
+        List<PassportRecord> records = passportsByPlayer.get(updated.getOwner());
+        if (records == null) {
+            return false;
+        }
+        for (int i = 0; i < records.size(); i++) {
+            if (records.get(i).getDocumentId().equalsIgnoreCase(updated.getDocumentId())) {
+                records.set(i, updated);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public PassportRecord removeDocumentById(String documentId) {
+        for (Map.Entry<UUID, List<PassportRecord>> entry : passportsByPlayer.entrySet()) {
+            List<PassportRecord> records = entry.getValue();
+            for (int i = 0; i < records.size(); i++) {
+                PassportRecord record = records.get(i);
+                if (record.getDocumentId().equalsIgnoreCase(documentId)) {
+                    records.remove(i);
+                    return record;
+                }
+            }
+        }
+        return null;
     }
 
     public Map<String, PassportApplication> getApplications() {
@@ -76,9 +115,9 @@ public class PassportStore {
                                 doc.getInt("age", 18),
                                 doc.getString("sex", "Unspecified"),
                                 doc.getString("notes", "None"),
-                                PassportRecord.AuthorityType.valueOf(doc.getString("authorityType", "TOWN")),
+                                PassportRecord.AuthorityType.valueOf(doc.getString("authorityType", "TOWN").toUpperCase(Locale.ROOT)),
                                 doc.getString("authorityName", "Unknown"),
-                                PassportRecord.DocumentType.valueOf(doc.getString("documentType", "PASSPORT")),
+                                PassportRecord.DocumentType.valueOf(doc.getString("documentType", "PASSPORT").toUpperCase(Locale.ROOT)),
                                 Instant.ofEpochMilli(doc.getLong("issuedAt", System.currentTimeMillis())),
                                 Instant.ofEpochMilli(doc.getLong("expiresAt", System.currentTimeMillis()))
                         ));
@@ -104,7 +143,7 @@ public class PassportStore {
             try {
                 PassportApplication application = new PassportApplication(
                         appId,
-                        UUID.fromString(app.getString("applicant")),
+                        UUID.fromString(app.getString("applicant", "00000000-0000-0000-0000-000000000000")),
                         app.getString("applicantName", "Unknown"),
                         PassportRecord.DocumentType.valueOf(app.getString("documentType", "PASSPORT").toUpperCase(Locale.ROOT)),
                         PassportRecord.AuthorityType.valueOf(app.getString("authorityType", "TOWN").toUpperCase(Locale.ROOT)),

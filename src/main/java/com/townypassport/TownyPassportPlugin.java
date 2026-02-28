@@ -27,21 +27,17 @@ public class TownyPassportPlugin extends JavaPlugin {
         PassportService passportService = new PassportService(this, economy, townyHook, passportStore);
         PortraitIntegration portraitIntegration = new PortraitIntegration(this);
 
-        PluginCommand passportCommand = getCommand("passport");
-        if (passportCommand != null) {
-            PassportCommand executor = new PassportCommand(passportService, townyHook, portraitIntegration);
-            passportCommand.setExecutor(executor);
-            passportCommand.setTabCompleter(executor);
-        }
+        PassportCommand passportExecutor = new PassportCommand(passportService, townyHook, portraitIntegration);
+        bindCommand("townypassport", passportExecutor, passportExecutor);
+        bindCommand("passport", passportExecutor, passportExecutor);
 
-        PluginCommand visaCommand = getCommand("visa");
-        if (visaCommand != null) {
-            VisaCommand executor = new VisaCommand(passportService, townyHook);
-            visaCommand.setExecutor(executor);
-            visaCommand.setTabCompleter(executor);
-        }
+        VisaCommand visaExecutor = new VisaCommand(passportService, townyHook);
+        bindCommand("townyvisa", visaExecutor, visaExecutor);
+        bindCommand("visa", visaExecutor, visaExecutor);
 
         Bukkit.getPluginManager().registerEvents(new BorderListener(passportService, townyHook), this);
+        Bukkit.getPluginManager().registerEvents(new StarterPassportListener(passportService), this);
+        Bukkit.getOnlinePlayers().forEach(passportService::ensureTownOwnerStarterPassport);
         getLogger().info("TownyPassport enabled.");
     }
 
@@ -50,6 +46,15 @@ public class TownyPassportPlugin extends JavaPlugin {
         if (passportStore != null) {
             passportStore.save();
         }
+    }
+
+    private void bindCommand(String name, org.bukkit.command.CommandExecutor executor, org.bukkit.command.TabCompleter completer) {
+        PluginCommand command = getCommand(name);
+        if (command == null) {
+            return;
+        }
+        command.setExecutor(executor);
+        command.setTabCompleter(completer);
     }
 
     private boolean setupVault() {
