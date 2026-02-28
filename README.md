@@ -12,6 +12,7 @@ TownyPassport is a Paper/Spigot plugin that adds roleplay-style identity documen
 
 - Nations and towns can issue **passports** and **visas**.
 - Players can apply for passports/visas and officials can approve applications.
+- Only one pending application per player is allowed at a time.
 - Town owners (mayors) can automatically receive an initial town passport on join/enable.
 - Viewing documents opens a **written book** with identity info:
   - Optional portrait placeholders using free plugin setups.

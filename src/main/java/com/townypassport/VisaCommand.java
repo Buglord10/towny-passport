@@ -49,6 +49,10 @@ public class VisaCommand implements CommandExecutor, TabCompleter {
                 player.sendMessage(ChatColor.RED + "Invalid authority or age.");
                 return true;
             }
+            if (service.hasPendingApplication(player.getUniqueId())) {
+                player.sendMessage(ChatColor.RED + "You already have a pending application. Wait for approval before applying again.");
+                return true;
+            }
             String notes = args.length > 5 ? String.join(" ", Arrays.copyOfRange(args, 5, args.length)) : "None";
             PassportApplication app = service.createApplication(player, PassportRecord.DocumentType.VISA, type, args[2], age, args[4], notes);
             if (app == null) {
@@ -130,32 +134,40 @@ public class VisaCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        List<String> out = new ArrayList<>();
+        String sub = args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "";
+
         if (args.length == 1) {
-            out.add("apply");
-            out.add("issue");
-            out.add("approve");
-            return out;
+            return completePrefix(args[0], List.of("apply", "issue", "approve"));
         }
-        if (args.length == 2 && (args[0].equalsIgnoreCase("apply") || args[0].equalsIgnoreCase("issue"))) {
-            out.add("town");
-            out.add("nation");
-            return out;
+
+        if (sub.equals("apply")) {
+            if (args.length == 2) return completePrefix(args[1], List.of("town", "nation"));
+            if (args.length == 3) return completePrefix(args[2], args[1].equalsIgnoreCase("town") ? townyHook.getTownNames() : townyHook.getNationNames());
+            if (args.length == 4) return completePrefix(args[3], List.of("18", "21", "25", "30"));
+            if (args.length == 5) return completePrefix(args[4], List.of("Male", "Female", "Other", "Unspecified"));
         }
-        if (args.length == 3 && args[0].equalsIgnoreCase("apply")) {
-            if (args[1].equalsIgnoreCase("town")) {
-                return townyHook.getTownNames();
-            }
-            if (args[1].equalsIgnoreCase("nation")) {
-                return townyHook.getNationNames();
-            }
+
+        if (sub.equals("issue")) {
+            if (args.length == 2) return completePrefix(args[1], Bukkit.getOnlinePlayers().stream().map(Player::getName).toList());
+            if (args.length == 3) return completePrefix(args[2], List.of("town", "nation"));
+            if (args.length == 4) return completePrefix(args[3], args[2].equalsIgnoreCase("town") ? townyHook.getTownNames() : townyHook.getNationNames());
+            if (args.length == 5) return completePrefix(args[4], List.of("18", "21", "25", "30"));
+            if (args.length == 6) return completePrefix(args[5], List.of("Male", "Female", "Other", "Unspecified"));
         }
-        if (args.length == 4 && args[0].equalsIgnoreCase("issue")) {
-            if (args[2].equalsIgnoreCase("town")) {
-                return townyHook.getTownNames();
-            }
-            if (args[2].equalsIgnoreCase("nation")) {
-                return townyHook.getNationNames();
+
+        if (sub.equals("approve") && args.length == 2) {
+            return completePrefix(args[1], service.getVisaApplicationIds());
+        }
+
+        return new ArrayList<>();
+    }
+
+    private List<String> completePrefix(String current, List<String> options) {
+        String lower = current == null ? "" : current.toLowerCase(Locale.ROOT);
+        List<String> out = new ArrayList<>();
+        for (String option : options) {
+            if (option.toLowerCase(Locale.ROOT).startsWith(lower)) {
+                out.add(option);
             }
         }
         return out;

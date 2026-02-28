@@ -81,8 +81,54 @@ public class PassportStore {
         applications.put(application.getApplicationId(), application);
     }
 
+    public boolean hasPendingApplication(UUID applicant) {
+        for (PassportApplication application : applications.values()) {
+            if (application.getApplicant().equals(applicant)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public PassportApplication removeApplication(String id) {
         return applications.remove(id);
+    }
+
+
+    public List<String> getAllApplicationIds() {
+        return new ArrayList<>(applications.keySet());
+    }
+
+    public List<String> getApplicationIdsByDocumentType(PassportRecord.DocumentType type) {
+        List<String> ids = new ArrayList<>();
+        for (PassportApplication app : applications.values()) {
+            if (app.getDocumentType() == type) {
+                ids.add(app.getApplicationId());
+            }
+        }
+        return ids;
+    }
+
+    public List<String> getAllDocumentIds() {
+        List<String> ids = new ArrayList<>();
+        for (List<PassportRecord> records : passportsByPlayer.values()) {
+            for (PassportRecord record : records) {
+                ids.add(record.getDocumentId());
+            }
+        }
+        return ids;
+    }
+
+    public List<String> getDocumentIdsByType(PassportRecord.DocumentType type) {
+        List<String> ids = new ArrayList<>();
+        for (List<PassportRecord> records : passportsByPlayer.values()) {
+            for (PassportRecord record : records) {
+                if (record.getDocumentType() == type) {
+                    ids.add(record.getDocumentId());
+                }
+            }
+        }
+        return ids;
     }
 
     public void load() {

@@ -30,6 +30,10 @@ public class PassportService {
         this.economy = economy;
     }
 
+    public boolean hasPendingApplication(UUID applicantId) {
+        return store.hasPendingApplication(applicantId);
+    }
+
     public PassportApplication createApplication(
             Player applicant,
             PassportRecord.DocumentType documentType,
@@ -40,6 +44,10 @@ public class PassportService {
             String notes
     ) {
         if (!authorityExists(authorityType, authorityName)) {
+            return null;
+        }
+
+        if (store.hasPendingApplication(applicant.getUniqueId())) {
             return null;
         }
 
@@ -136,6 +144,27 @@ public class PassportService {
 
     public PassportApplication getApplication(String appId) {
         return store.getApplications().get(appId);
+    }
+
+
+    public List<String> getPassportApplicationIds() {
+        return store.getApplicationIdsByDocumentType(PassportRecord.DocumentType.PASSPORT);
+    }
+
+    public List<String> getVisaApplicationIds() {
+        return store.getApplicationIdsByDocumentType(PassportRecord.DocumentType.VISA);
+    }
+
+    public List<String> getPassportDocumentIds() {
+        return store.getDocumentIdsByType(PassportRecord.DocumentType.PASSPORT);
+    }
+
+    public List<String> getVisaDocumentIds() {
+        return store.getDocumentIdsByType(PassportRecord.DocumentType.VISA);
+    }
+
+    public List<String> getAllDocumentIds() {
+        return store.getAllDocumentIds();
     }
 
     public List<PassportRecord> getPassports(UUID playerId) {
