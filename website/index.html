@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FrenchPath - Duolingo-style CEFR & GCSE French Learning</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">FrenchPath</p>
+      <h1>Learn French with units, streaks, and placement testing</h1>
+    </div>
+    <div class="track-panel">
+      <label for="track">Curriculum</label>
+      <select id="track">
+        <option value="cefr">CEFR Path</option>
+        <option value="gcse">GCSE Path</option>
+      </select>
+      <p id="track-description"></p>
+    </div>
+  </header>
+
+  <main>
+    <section class="layout-grid">
+      <article class="card auth-card">
+        <h2>Account</h2>
+        <p>Create an account to save streak, XP, placement level, and completed units in your browser.</p>
+        <form id="auth-form">
+          <label for="username">Username</label>
+          <input id="username" name="username" placeholder="e.g. marie123" required />
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required />
+          <div class="row-actions">
+            <button type="button" id="register-btn">Create account</button>
+            <button type="button" id="login-btn" class="secondary">Log in</button>
+            <button type="button" id="logout-btn" class="ghost">Log out</button>
+          </div>
+          <p id="auth-message" class="muted"></p>
+        </form>
+        <div class="stats" id="stats"></div>
+      </article>
+
+      <article class="card placement-card">
+        <h2>Level Quiz</h2>
+        <p>Take a quick quiz to estimate your starting level before beginning your unit path.</p>
+        <button id="start-placement" type="button">Start placement quiz</button>
+        <div id="placement-container" class="hidden">
+          <p class="topic" id="placement-topic"></p>
+          <h3 id="placement-question"></h3>
+          <div id="placement-options" class="options"></div>
+          <div class="row-actions">
+            <button id="submit-placement" type="button">Submit</button>
+          </div>
+          <div id="placement-feedback" class="feedback" aria-live="polite"></div>
+        </div>
+      </article>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Unit Path</h2>
+        <p>Duolingo-style units with checkpoints. Complete lessons to unlock the next unit.</p>
+      </div>
+      <div id="unit-path" class="unit-path"></div>
+    </section>
+
+    <section class="card lesson-card">
+      <div class="section-head">
+        <h2>Lesson Quiz</h2>
+        <p>Wrong answer explanations help you understand grammar, agreement, and tense errors instantly.</p>
+      </div>
+      <p class="topic" id="question-topic"></p>
+      <h3 id="question-text"></h3>
+      <div id="options" class="options"></div>
+      <div class="row-actions">
+        <button id="submit-answer" type="button">Check answer</button>
+        <button id="next-question" type="button" class="secondary">Next question</button>
+      </div>
+      <div id="feedback" class="feedback" aria-live="polite"></div>
+    </section>
+
+    <section>
+      <h2>Rules & Reference</h2>
+      <div class="card-grid quick-links">
+        <a class="card" href="grammar.html"><h3>Core Grammar Rules</h3><p>Sentence order, negation, questions, pronouns.</p></a>
+        <a class="card" href="agreement.html"><h3>Agreement Essentials</h3><p>Gender, number, adjective and participle agreement.</p></a>
+        <a class="card" href="tenses.html"><h3>Tenses Masterclass</h3><p>Present, perfect, imperfect, future, conditional, subjunctive.</p></a>
+        <a class="card" href="conjugation.html"><h3>Conjugation Patterns</h3><p>Regular/irregular verbs and stem changes.</p></a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>FrenchPath © 2026 · CEFR & GCSE French with level quiz and saved progress</p>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>

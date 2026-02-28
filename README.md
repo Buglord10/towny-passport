@@ -87,3 +87,19 @@ book-portrait:
 ```
 
 If PlaceholderAPI is not installed, the template is used literally (with `{player}` replacement only).
+
+## French Learning Website (static demo)
+
+A standalone website is available in `website/` with:
+- A Duolingo-style unit path for both CEFR and GCSE French.
+- A placement quiz to estimate starting level.
+- Account creation/login and local progress saving (XP, streak, completed units, placement).
+- Lesson quiz feedback that explains mistakes and provides correct answers.
+- Dedicated rule pages for grammar, agreement, tenses, and conjugation.
+
+Run locally:
+
+```bash
+python3 -m http.server 4173 --directory website
+```
+Then open `http://localhost:4173`.
