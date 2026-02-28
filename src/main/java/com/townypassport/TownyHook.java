@@ -205,6 +205,78 @@ public class TownyHook {
         }
     }
 
+
+
+    public org.bukkit.OfflinePlayer resolveAuthorityOwner(PassportRecord.AuthorityType authorityType, String authorityName) {
+        if (authorityType == PassportRecord.AuthorityType.TOWN) {
+            return getTownMayor(authorityName);
+        }
+        return getNationLeader(authorityName);
+    }
+
+    public org.bukkit.OfflinePlayer getTownMayor(String townName) {
+        Object town = getTownObject(townName);
+        if (town == null) {
+            return null;
+        }
+        try {
+            Object mayor = town.getClass().getMethod("getMayor").invoke(town);
+            if (mayor == null) {
+                return null;
+            }
+            Object uuidObj = mayor.getClass().getMethod("getUUID").invoke(mayor);
+            if (uuidObj instanceof java.util.UUID uuid) {
+                return plugin.getServer().getOfflinePlayer(uuid);
+            }
+        } catch (ReflectiveOperationException ex) {
+            plugin.getLogger().warning("Failed resolving town mayor: " + ex.getMessage());
+        }
+        return null;
+    }
+
+    public org.bukkit.OfflinePlayer getNationLeader(String nationName) {
+        if (!isTownyAvailable()) {
+            return null;
+        }
+        try {
+            Class<?> townyApiClass = Class.forName("com.palmergames.bukkit.towny.TownyAPI");
+            Object api = townyApiClass.getMethod("getInstance").invoke(null);
+            Object nation = townyApiClass.getMethod("getNation", String.class).invoke(api, nationName);
+            if (nation == null) {
+                return null;
+            }
+
+            Object leader;
+            try {
+                leader = nation.getClass().getMethod("getKing").invoke(nation);
+            } catch (NoSuchMethodException ex) {
+                leader = nation.getClass().getMethod("getLeader").invoke(nation);
+            }
+
+            if (leader != null) {
+                Object uuidObj = leader.getClass().getMethod("getUUID").invoke(leader);
+                if (uuidObj instanceof java.util.UUID uuid) {
+                    return plugin.getServer().getOfflinePlayer(uuid);
+                }
+            }
+
+            // fallback: use capital town mayor if direct leader lookup failed
+            Object capital = nation.getClass().getMethod("getCapital").invoke(nation);
+            if (capital != null) {
+                Object mayor = capital.getClass().getMethod("getMayor").invoke(capital);
+                if (mayor != null) {
+                    Object uuidObj = mayor.getClass().getMethod("getUUID").invoke(mayor);
+                    if (uuidObj instanceof java.util.UUID uuid) {
+                        return plugin.getServer().getOfflinePlayer(uuid);
+                    }
+                }
+            }
+        } catch (ReflectiveOperationException ex) {
+            plugin.getLogger().warning("Failed resolving nation leader: " + ex.getMessage());
+        }
+        return null;
+    }
+
     private Object getTownObject(String townName) {
         if (!isTownyAvailable()) {
             return null;

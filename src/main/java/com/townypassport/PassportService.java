@@ -66,6 +66,12 @@ public class PassportService {
         );
         store.addApplication(app);
         store.save();
+
+        OfflinePlayer owner = townyHook.resolveAuthorityOwner(authorityType, authorityName);
+        if (owner != null && owner.isOnline() && owner.getPlayer() != null) {
+            owner.getPlayer().sendMessage("[TownyPassport] New " + documentType.name().toLowerCase(Locale.ROOT)
+                    + " application " + appId + " from " + app.getApplicantName() + " for " + authorityName + ".");
+        }
         return app;
     }
 
@@ -84,14 +90,13 @@ public class PassportService {
             return null;
         }
 
-        double defaultFee = documentType == PassportRecord.DocumentType.PASSPORT ? 250.0 : 50.0;
-        double fee = plugin.getConfig().getDouble(documentType == PassportRecord.DocumentType.PASSPORT ? "fees.passport" : "fees.visa", defaultFee);
+        double fee = getConfiguredFee(authorityType, authorityName, documentType);
         if (!charge(payer, fee)) {
             return null;
         }
 
         Instant now = Instant.now();
-        int validDays = plugin.getConfig().getInt(documentType == PassportRecord.DocumentType.PASSPORT ? "passport-valid-days" : "visa-valid-days", 90);
+        int validDays = getConfiguredDays(authorityType, authorityName, documentType);
         String prefix = documentType == PassportRecord.DocumentType.PASSPORT ? "PP-" : "VS-";
         String docId = prefix + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT);
 
@@ -114,14 +119,13 @@ public class PassportService {
         return record;
     }
 
-    public PassportRecord approveApplication(String appId, Player approver) {
+    public ApprovalOutcome approveApplication(String appId, Player approver) {
         PassportApplication app = store.getApplications().get(appId);
         if (app == null) {
             return null;
         }
 
         OfflinePlayer target = plugin.getServer().getOfflinePlayer(app.getApplicant());
-        Player payer = plugin.getConfig().getBoolean("fees.charge-on-approval", false) ? approver : null;
 
         PassportRecord record = issueDocument(
                 app.getDocumentType(),
@@ -132,14 +136,50 @@ public class PassportService {
                 app.getNotes(),
                 app.getAuthorityType(),
                 app.getAuthorityName(),
-                payer
+                null
         );
 
-        if (record != null) {
-            store.removeApplication(appId);
-            store.save();
+        if (record == null) {
+            return null;
         }
-        return record;
+
+        store.removeApplication(appId);
+        store.save();
+
+        double charged = 0.0;
+        String beneficiaryName = "None";
+
+        if (plugin.getConfig().getBoolean("fees.charge-on-approval", true) && economy != null) {
+            double fee = getConfiguredFee(app.getAuthorityType(), app.getAuthorityName(), app.getDocumentType());
+
+            if (fee > 0) {
+                OfflinePlayer beneficiary = townyHook.resolveAuthorityOwner(app.getAuthorityType(), app.getAuthorityName());
+                if (beneficiary != null) {
+                    EconomyResponse withdraw = economy.withdrawPlayer(target, fee);
+                    if (withdraw.transactionSuccess()) {
+                        EconomyResponse deposit = economy.depositPlayer(beneficiary, fee);
+                        if (deposit.transactionSuccess()) {
+                            charged = fee;
+                            beneficiaryName = beneficiary.getName() == null ? beneficiary.getUniqueId().toString() : beneficiary.getName();
+                        } else {
+                            economy.depositPlayer(target, fee);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (target.isOnline() && target.getPlayer() != null) {
+            target.getPlayer().sendMessage("[TownyPassport] Your application was approved. Document: " + record.getDocumentId());
+            target.getPlayer().sendMessage("[TownyPassport] Charged: " + charged + " -> " + beneficiaryName);
+        }
+
+        OfflinePlayer beneficiaryNotify = townyHook.resolveAuthorityOwner(app.getAuthorityType(), app.getAuthorityName());
+        if (beneficiaryNotify != null && beneficiaryNotify.isOnline() && beneficiaryNotify.getPlayer() != null) {
+            beneficiaryNotify.getPlayer().sendMessage("[TownyPassport] You received " + charged + " from approved application " + appId + ".");
+        }
+
+        return new ApprovalOutcome(record, charged, beneficiaryName);
     }
 
     public PassportApplication getApplication(String appId) {
@@ -234,6 +274,43 @@ public class PassportService {
                 townName,
                 null
         );
+    }
+
+
+
+    public void setAuthoritySetting(PassportRecord.AuthorityType type, String authorityName, String setting, String value) {
+        String key = "authority-settings." + authorityKey(type, authorityName) + "." + setting;
+        plugin.getConfig().set(key, value);
+        plugin.saveConfig();
+    }
+
+    public String getAuthoritySettingsSummary(PassportRecord.AuthorityType type, String authorityName) {
+        double passportFee = getConfiguredFee(type, authorityName, PassportRecord.DocumentType.PASSPORT);
+        double visaFee = getConfiguredFee(type, authorityName, PassportRecord.DocumentType.VISA);
+        int passportDays = getConfiguredDays(type, authorityName, PassportRecord.DocumentType.PASSPORT);
+        int visaDays = getConfiguredDays(type, authorityName, PassportRecord.DocumentType.VISA);
+        return "passportFee=" + passportFee + ", visaFee=" + visaFee + ", passportDays=" + passportDays + ", visaDays=" + visaDays;
+    }
+
+    private String authorityKey(PassportRecord.AuthorityType type, String authorityName) {
+        return type.name().toLowerCase(Locale.ROOT) + "." + authorityName.toLowerCase(Locale.ROOT);
+    }
+
+    private double getConfiguredFee(PassportRecord.AuthorityType authorityType, String authorityName, PassportRecord.DocumentType documentType) {
+        String overrideKey = "authority-settings." + authorityKey(authorityType, authorityName) + "." + (documentType == PassportRecord.DocumentType.PASSPORT ? "passport-fee" : "visa-fee");
+        if (plugin.getConfig().contains(overrideKey)) {
+            return plugin.getConfig().getDouble(overrideKey);
+        }
+        double defaultFee = documentType == PassportRecord.DocumentType.PASSPORT ? 250.0 : 50.0;
+        return plugin.getConfig().getDouble(documentType == PassportRecord.DocumentType.PASSPORT ? "fees.passport" : "fees.visa", defaultFee);
+    }
+
+    private int getConfiguredDays(PassportRecord.AuthorityType authorityType, String authorityName, PassportRecord.DocumentType documentType) {
+        String overrideKey = "authority-settings." + authorityKey(authorityType, authorityName) + "." + (documentType == PassportRecord.DocumentType.PASSPORT ? "passport-days" : "visa-days");
+        if (plugin.getConfig().contains(overrideKey)) {
+            return plugin.getConfig().getInt(overrideKey);
+        }
+        return plugin.getConfig().getInt(documentType == PassportRecord.DocumentType.PASSPORT ? "passport-valid-days" : "visa-valid-days", 90);
     }
 
     public List<PassportApplication> getApplicationsForAuthority(PassportRecord.AuthorityType type, String authorityName) {

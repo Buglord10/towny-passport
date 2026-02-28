@@ -6,7 +6,7 @@ visa-valid-days: 30
 fees:
   passport: 250.0
   visa: 50.0
-  charge-on-approval: false
+  charge-on-approval: true
 
 starter-passport-town-owner:
   enabled: true
@@ -21,3 +21,8 @@ book-portrait:
   # Or any free placeholder/glyph token you configure:
   # template: "%some_portrait_placeholder%"
   template: ""
+
+
+spawn-restrictions:
+  enabled: true
+  fallback-to-world-spawn: true

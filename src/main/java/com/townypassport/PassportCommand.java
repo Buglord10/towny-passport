@@ -57,6 +57,7 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
             case "search" -> handleSearch(player, args);
             case "renew" -> handleRenew(player, args);
             case "revoke" -> handleRevoke(player, args);
+            case "settings" -> handleSettings(player, args);
             default -> sendUsage(player);
         }
         return true;
@@ -150,13 +151,15 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        PassportRecord record = service.approveApplication(args[1], player);
-        if (record == null) {
+        ApprovalOutcome outcome = service.approveApplication(args[1], player);
+        if (outcome == null || outcome.getRecord() == null) {
             player.sendMessage(ChatColor.RED + "Could not approve application.");
             return;
         }
 
+        PassportRecord record = outcome.getRecord();
         player.sendMessage(ChatColor.GREEN + "Approved application. Issued " + record.getDocumentId());
+        player.sendMessage(ChatColor.AQUA + "Charge on approval: " + outcome.getChargedAmount() + " paid to " + outcome.getBeneficiaryName());
     }
 
     private void handleApplications(Player player, String[] args) {
@@ -307,6 +310,58 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.GREEN + "Revoked document " + args[1]);
     }
 
+
+
+    private void handleSettings(Player player, String[] args) {
+        if (args.length < 4) {
+            player.sendMessage(ChatColor.YELLOW + "Usage: /passport settings <town|nation> <authorityName> <show|passport-fee|visa-fee|passport-days|visa-days> [value]");
+            return;
+        }
+
+        PassportRecord.AuthorityType type = parseAuthority(args[1]);
+        if (type == null) {
+            player.sendMessage(ChatColor.RED + "Authority type must be town or nation.");
+            return;
+        }
+
+        String authorityName = args[2];
+        if (!canIssue(player, type, authorityName)) {
+            player.sendMessage(ChatColor.RED + "You cannot manage settings for this authority.");
+            return;
+        }
+
+        String setting = args[3].toLowerCase(Locale.ROOT);
+        if (setting.equals("show")) {
+            player.sendMessage(ChatColor.AQUA + "Settings for " + authorityName + ": " + service.getAuthoritySettingsSummary(type, authorityName));
+            return;
+        }
+
+        if (args.length < 5) {
+            player.sendMessage(ChatColor.YELLOW + "Provide a value for " + setting + ".");
+            return;
+        }
+
+        String value = args[4];
+        try {
+            if (setting.endsWith("fee")) {
+                double parsed = Double.parseDouble(value);
+                if (parsed < 0) throw new NumberFormatException();
+            } else if (setting.endsWith("days")) {
+                int parsed = Integer.parseInt(value);
+                if (parsed <= 0) throw new NumberFormatException();
+            } else {
+                player.sendMessage(ChatColor.RED + "Unknown setting: " + setting);
+                return;
+            }
+        } catch (NumberFormatException ex) {
+            player.sendMessage(ChatColor.RED + "Invalid numeric value.");
+            return;
+        }
+
+        service.setAuthoritySetting(type, authorityName, setting, value);
+        player.sendMessage(ChatColor.GREEN + "Updated " + authorityName + " setting " + setting + " = " + value);
+    }
+
     private PassportRecord.AuthorityType parseAuthority(String input) {
         if (input.equalsIgnoreCase("town")) {
             return PassportRecord.AuthorityType.TOWN;
@@ -342,6 +397,7 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.YELLOW + "/passport search <documentId>");
         player.sendMessage(ChatColor.YELLOW + "/passport renew <documentId> <days> (admin)");
         player.sendMessage(ChatColor.YELLOW + "/passport revoke <documentId> (admin)");
+        player.sendMessage(ChatColor.YELLOW + "/passport settings <town|nation> <authorityName> <show|passport-fee|visa-fee|passport-days|visa-days> [value]");
     }
 
     @Override
@@ -349,7 +405,7 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
         String sub = args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "";
 
         if (args.length == 1) {
-            return completePrefix(args[0], List.of("apply", "issue", "applications", "approve", "view", "list", "search", "renew", "revoke"));
+            return completePrefix(args[0], List.of("apply", "issue", "applications", "approve", "view", "list", "search", "renew", "revoke", "settings"));
         }
 
         if (sub.equals("apply")) {
@@ -401,6 +457,14 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
 
         if (sub.equals("revoke") && args.length == 2) {
             return completePrefix(args[1], service.getPassportDocumentIds());
+        }
+
+        if (sub.equals("settings")) {
+            if (args.length == 2) return completePrefix(args[1], List.of("town", "nation"));
+            if (args.length == 3) return completePrefix(args[2], args[1].equalsIgnoreCase("town") ? townyHook.getTownNames() : townyHook.getNationNames());
+            if (args.length == 4) return completePrefix(args[3], List.of("show", "passport-fee", "visa-fee", "passport-days", "visa-days"));
+            if (args.length == 5 && args[3].toLowerCase(Locale.ROOT).endsWith("fee")) return completePrefix(args[4], List.of("0", "10", "25", "50", "100", "250"));
+            if (args.length == 5 && args[3].toLowerCase(Locale.ROOT).endsWith("days")) return completePrefix(args[4], List.of("7", "14", "30", "90", "180"));
         }
 
         return new ArrayList<>();

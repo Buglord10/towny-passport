@@ -47,6 +47,7 @@ public class TownyPassportPlugin extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new BorderListener(passportService, townyHook), this);
         Bukkit.getPluginManager().registerEvents(new StarterPassportListener(passportService), this);
         Bukkit.getPluginManager().registerEvents(new EconomyProviderListener(this, passportService), this);
+        Bukkit.getPluginManager().registerEvents(new SpawnRestrictionListener(this, passportService, townyHook), this);
         Bukkit.getOnlinePlayers().forEach(passportService::ensureTownOwnerStarterPassport);
 
         getLogger().info("TownyPassport enabled.");

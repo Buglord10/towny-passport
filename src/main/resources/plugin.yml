@@ -6,7 +6,7 @@ softdepend: [Vault, Towny, PlaceholderAPI, SkinsRestorer]
 commands:
   townypassport:
     description: Apply, issue, manage, and view passports
-    usage: /townypassport <apply|issue|applications|approve|view|list|search|renew|revoke> ...
+    usage: /townypassport <apply|issue|applications|approve|view|list|search|renew|revoke|settings> ...
     aliases: [tpassport, passport]
   townyvisa:
     description: Apply, issue, and approve visas

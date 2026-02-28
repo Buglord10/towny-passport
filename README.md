@@ -12,6 +12,7 @@ TownyPassport is a Paper/Spigot plugin that adds roleplay-style identity documen
 
 - Nations and towns can issue **passports** and **visas**.
 - Players can apply for passports/visas and officials can approve applications.
+- On approval, configured fee can be charged to the applicant and paid to the town/nation owner, with a confirmation message showing the amount.
 - Only one pending application per player is allowed at a time.
 - Town owners (mayors) can automatically receive an initial town passport on join/enable.
 - Viewing documents opens a **written book** with identity info:
@@ -20,6 +21,7 @@ TownyPassport is a Paper/Spigot plugin that adds roleplay-style identity documen
 - Border enforcement: players can only enter a town if they hold:
   - A valid passport issued by that **town**, or
   - A valid passport issued by that town's **nation**.
+- Spawn restrictions: respawning inside a town is denied unless the player has valid town/nation passport access for that town.
 - Entry scope rules:
   - A **nation passport** grants access to all towns in that nation.
   - A **town passport** grants access only to that one town.
@@ -37,6 +39,7 @@ Use the namespaced command to avoid command conflicts with other plugins:
 - `/townypassport search <documentId>`
 - `/townypassport renew <documentId> <days>` (admin)
 - `/townypassport revoke <documentId>` (admin)
+- `/townypassport settings <town|nation> <authorityName> <show|passport-fee|visa-fee|passport-days|visa-days> [value]`
 
 Legacy aliases still work if not taken by another plugin: `/passport`, `/tpassport`.
 
@@ -61,7 +64,7 @@ Legacy aliases still work if free: `/visa`, `/tvisa`.
 
 ```yml
 fees:
-  charge-on-approval: false
+  charge-on-approval: true
 
 starter-passport-town-owner:
   enabled: true
@@ -100,3 +103,20 @@ Make sure one supported economy plugin (EssentialsX Economy, CMI, etc.) is insta
 - If a Vault economy provider is present, configured fees are charged.
 - If no provider is found and `economy.required: false` (default), plugin still runs and treats fees as no-cost.
 - Set `economy.required: true` to force-disable startup without an economy provider.
+
+
+## Spawn restrictions
+Configure spawn checks in `config.yml`:
+
+```yml
+spawn-restrictions:
+  enabled: true
+  fallback-to-world-spawn: true
+```
+
+If enabled, respawns in Towny towns require a valid passport for that town or its nation.
+
+
+## Authority-controlled pricing and validity
+Town and nation owners (or permitted staff) can set per-authority fees and validity periods using the settings command.
+These settings override global defaults for that authority.

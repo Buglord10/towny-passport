@@ -99,12 +99,14 @@ public class VisaCommand implements CommandExecutor, TabCompleter {
                 player.sendMessage(ChatColor.RED + "You cannot approve for this authority.");
                 return true;
             }
-            var record = service.approveApplication(args[1], player);
-            if (record == null) {
+            ApprovalOutcome outcome = service.approveApplication(args[1], player);
+            if (outcome == null || outcome.getRecord() == null) {
                 player.sendMessage(ChatColor.RED + "Could not approve visa application.");
                 return true;
             }
+            PassportRecord record = outcome.getRecord();
             player.sendMessage(ChatColor.GREEN + "Approved visa application: " + record.getDocumentId());
+            player.sendMessage(ChatColor.AQUA + "Charge on approval: " + outcome.getChargedAmount() + " paid to " + outcome.getBeneficiaryName());
             return true;
         }
 
