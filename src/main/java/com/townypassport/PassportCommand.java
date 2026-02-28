@@ -352,10 +352,34 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
             list.add("search");
             list.add("renew");
             list.add("revoke");
-        } else if (args.length == 2 && (args[0].equalsIgnoreCase("apply") || args[0].equalsIgnoreCase("issue") || args[0].equalsIgnoreCase("applications"))) {
+            return list;
+        }
+
+        if (args.length == 2 && (args[0].equalsIgnoreCase("apply") || args[0].equalsIgnoreCase("issue") || args[0].equalsIgnoreCase("applications"))) {
             list.add("town");
             list.add("nation");
+            return list;
         }
+
+        // authority name completion
+        if (args.length == 3 && (args[0].equalsIgnoreCase("apply") || args[0].equalsIgnoreCase("applications"))) {
+            if (args[1].equalsIgnoreCase("town")) {
+                return townyHook.getTownNames();
+            }
+            if (args[1].equalsIgnoreCase("nation")) {
+                return townyHook.getNationNames();
+            }
+        }
+
+        if (args.length == 4 && args[0].equalsIgnoreCase("issue")) {
+            if (args[2].equalsIgnoreCase("town")) {
+                return townyHook.getTownNames();
+            }
+            if (args[2].equalsIgnoreCase("nation")) {
+                return townyHook.getNationNames();
+            }
+        }
+
         return list;
     }
 }

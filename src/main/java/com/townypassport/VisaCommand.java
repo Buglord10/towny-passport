@@ -135,6 +135,28 @@ public class VisaCommand implements CommandExecutor, TabCompleter {
             out.add("apply");
             out.add("issue");
             out.add("approve");
+            return out;
+        }
+        if (args.length == 2 && (args[0].equalsIgnoreCase("apply") || args[0].equalsIgnoreCase("issue"))) {
+            out.add("town");
+            out.add("nation");
+            return out;
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("apply")) {
+            if (args[1].equalsIgnoreCase("town")) {
+                return townyHook.getTownNames();
+            }
+            if (args[1].equalsIgnoreCase("nation")) {
+                return townyHook.getNationNames();
+            }
+        }
+        if (args.length == 4 && args[0].equalsIgnoreCase("issue")) {
+            if (args[2].equalsIgnoreCase("town")) {
+                return townyHook.getTownNames();
+            }
+            if (args[2].equalsIgnoreCase("nation")) {
+                return townyHook.getNationNames();
+            }
         }
         return out;
     }

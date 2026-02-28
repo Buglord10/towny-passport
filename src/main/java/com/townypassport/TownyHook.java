@@ -155,6 +155,56 @@ public class TownyHook {
         return player.hasPermission("townypassport.issue.nation." + nationName.toLowerCase());
     }
 
+
+
+    public java.util.List<String> getTownNames() {
+        if (!isTownyAvailable()) {
+            return java.util.List.of();
+        }
+        try {
+            Class<?> townyApiClass = Class.forName("com.palmergames.bukkit.towny.TownyAPI");
+            Object api = townyApiClass.getMethod("getInstance").invoke(null);
+            Object towns = townyApiClass.getMethod("getTowns").invoke(api);
+            java.util.List<String> names = new java.util.ArrayList<>();
+            if (towns instanceof java.lang.Iterable<?> iterable) {
+                for (Object town : iterable) {
+                    Object name = town.getClass().getMethod("getName").invoke(town);
+                    if (name instanceof String) {
+                        names.add((String) name);
+                    }
+                }
+            }
+            return names;
+        } catch (ReflectiveOperationException ex) {
+            plugin.getLogger().warning("Failed reading town list: " + ex.getMessage());
+            return java.util.List.of();
+        }
+    }
+
+    public java.util.List<String> getNationNames() {
+        if (!isTownyAvailable()) {
+            return java.util.List.of();
+        }
+        try {
+            Class<?> townyApiClass = Class.forName("com.palmergames.bukkit.towny.TownyAPI");
+            Object api = townyApiClass.getMethod("getInstance").invoke(null);
+            Object nations = townyApiClass.getMethod("getNations").invoke(api);
+            java.util.List<String> names = new java.util.ArrayList<>();
+            if (nations instanceof java.lang.Iterable<?> iterable) {
+                for (Object nation : iterable) {
+                    Object name = nation.getClass().getMethod("getName").invoke(nation);
+                    if (name instanceof String) {
+                        names.add((String) name);
+                    }
+                }
+            }
+            return names;
+        } catch (ReflectiveOperationException ex) {
+            plugin.getLogger().warning("Failed reading nation list: " + ex.getMessage());
+            return java.util.List.of();
+        }
+    }
+
     private Object getTownObject(String townName) {
         if (!isTownyAvailable()) {
             return null;
