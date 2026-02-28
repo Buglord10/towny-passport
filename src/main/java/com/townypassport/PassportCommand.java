@@ -91,7 +91,7 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleIssue(Player player, String[] args, PassportRecord.DocumentType docType) {
-        if (args.length < 7) {
+        if (args.length < 6) {
             player.sendMessage(ChatColor.YELLOW + "Usage: /passport issue <player> <town|nation> <authorityName> <age> <sex> [notes]");
             return;
         }

@@ -60,7 +60,7 @@ public class VisaCommand implements CommandExecutor, TabCompleter {
         }
 
         if (sub.equals("issue")) {
-            if (args.length < 7) {
+            if (args.length < 6) {
                 player.sendMessage(ChatColor.YELLOW + "Usage: /visa issue <player> <town|nation> <authorityName> <age> <sex> [notes]");
                 return true;
             }
