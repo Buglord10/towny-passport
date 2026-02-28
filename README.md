@@ -26,20 +26,26 @@ TownyPassport is a Paper/Spigot plugin that adds roleplay-style identity documen
 ## Commands
 
 ### Passport
-- `/passport apply <town|nation> <authorityName> <age> <sex> [notes]`
-- `/passport issue <player> <town|nation> <authorityName> <age> <sex> [notes]`
-- `/passport applications <town|nation> <authorityName>`
-- `/passport approve <applicationId>`
-- `/passport view [player] [index]`
-- `/passport list [player]`
-- `/passport search <documentId>`
-- `/passport renew <documentId> <days>` (admin)
-- `/passport revoke <documentId>` (admin)
+Use the namespaced command to avoid command conflicts with other plugins:
+- `/townypassport apply <town|nation> <authorityName> <age> <sex> [notes]`
+- `/townypassport issue <player> <town|nation> <authorityName> <age> <sex> [notes]`
+- `/townypassport applications <town|nation> <authorityName>`
+- `/townypassport approve <applicationId>`
+- `/townypassport view [player] [index]`
+- `/townypassport list [player]`
+- `/townypassport search <documentId>`
+- `/townypassport renew <documentId> <days>` (admin)
+- `/townypassport revoke <documentId>` (admin)
+
+Legacy aliases still work if not taken by another plugin: `/passport`, `/tpassport`.
 
 ### Visa
-- `/visa apply <town|nation> <authorityName> <age> <sex> [notes]`
-- `/visa issue <player> <town|nation> <authorityName> <age> <sex> [notes]`
-- `/visa approve <applicationId>`
+Use the namespaced command to avoid conflicts:
+- `/townyvisa apply <town|nation> <authorityName> <age> <sex> [notes]`
+- `/townyvisa issue <player> <town|nation> <authorityName> <age> <sex> [notes]`
+- `/townyvisa approve <applicationId>`
+
+Legacy aliases still work if free: `/visa`, `/tvisa`.
 
 ## Permissions
 
