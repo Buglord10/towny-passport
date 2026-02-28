@@ -273,12 +273,17 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleRenew(Player player, String[] args) {
-        if (!player.hasPermission("townypassport.admin")) {
-            player.sendMessage(ChatColor.RED + "Only admins can renew documents.");
-            return;
-        }
         if (args.length < 3) {
             player.sendMessage(ChatColor.YELLOW + "Usage: /passport renew <documentId> <days>");
+            return;
+        }
+        PassportRecord existing = service.findDocument(args[1]);
+        if (existing == null) {
+            player.sendMessage(ChatColor.RED + "Document not found.");
+            return;
+        }
+        if (!canIssue(player, existing.getAuthorityType(), existing.getAuthorityName())) {
+            player.sendMessage(ChatColor.RED + "Only the owning town/nation leader can renew this document.");
             return;
         }
         int days = parseAge(args[2]);
@@ -295,12 +300,17 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleRevoke(Player player, String[] args) {
-        if (!player.hasPermission("townypassport.admin")) {
-            player.sendMessage(ChatColor.RED + "Only admins can revoke documents.");
-            return;
-        }
         if (args.length < 2) {
             player.sendMessage(ChatColor.YELLOW + "Usage: /passport revoke <documentId>");
+            return;
+        }
+        PassportRecord existing = service.findDocument(args[1]);
+        if (existing == null) {
+            player.sendMessage(ChatColor.RED + "Document not found.");
+            return;
+        }
+        if (!canIssue(player, existing.getAuthorityType(), existing.getAuthorityName())) {
+            player.sendMessage(ChatColor.RED + "Only the owning town/nation leader can revoke this document.");
             return;
         }
         if (!service.revokeDocument(args[1])) {
@@ -395,8 +405,8 @@ public class PassportCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.YELLOW + "/passport view [player] [index]");
         player.sendMessage(ChatColor.YELLOW + "/passport list [player]");
         player.sendMessage(ChatColor.YELLOW + "/passport search <documentId>");
-        player.sendMessage(ChatColor.YELLOW + "/passport renew <documentId> <days> (admin)");
-        player.sendMessage(ChatColor.YELLOW + "/passport revoke <documentId> (admin)");
+        player.sendMessage(ChatColor.YELLOW + "/passport renew <documentId> <days>");
+        player.sendMessage(ChatColor.YELLOW + "/passport revoke <documentId>");
         player.sendMessage(ChatColor.YELLOW + "/passport settings <town|nation> <authorityName> <show|passport-fee|visa-fee|passport-days|visa-days> [value]");
     }
 

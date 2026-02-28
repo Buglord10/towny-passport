@@ -37,8 +37,8 @@ Use the namespaced command to avoid command conflicts with other plugins:
 - `/townypassport view [player] [index]`
 - `/townypassport list [player]`
 - `/townypassport search <documentId>`
-- `/townypassport renew <documentId> <days>` (admin)
-- `/townypassport revoke <documentId>` (admin)
+- `/townypassport renew <documentId> <days>`
+- `/townypassport revoke <documentId>`
 - `/townypassport settings <town|nation> <authorityName> <show|passport-fee|visa-fee|passport-days|visa-days> [value]`
 
 Legacy aliases still work if not taken by another plugin: `/passport`, `/tpassport`.
@@ -53,12 +53,9 @@ Legacy aliases still work if free: `/visa`, `/tvisa`.
 
 ## Permissions
 
-- `townypassport.admin`
-- `townypassport.issue.town.*`
-- `townypassport.issue.nation.*`
-- or per-authority dynamic nodes:
-  - `townypassport.issue.town.<townname>`
-  - `townypassport.issue.nation.<nationname>`
+Authority management is owner-based:
+- Town passport actions/settings require being that town's mayor/owner.
+- Nation passport actions/settings require being that nation's leader/owner.
 
 ## Config highlights
 
@@ -114,7 +111,8 @@ spawn-restrictions:
   fallback-to-world-spawn: true
 ```
 
-If enabled, respawns in Towny towns require a valid passport for that town or its nation.
+If enabled, respawns in Towny towns require a valid passport/visa for that town or its nation.
+Towny spawn commands (`/t spawn`, `/town spawn`, `/n spawn`, `/nation spawn`) are also blocked when the player lacks access documents.
 
 
 ## Authority-controlled pricing and validity

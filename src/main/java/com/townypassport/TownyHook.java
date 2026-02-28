@@ -141,18 +141,16 @@ public class TownyHook {
     }
 
     public boolean canIssueTownDocuments(Player player, String townName) {
-        if (player.hasPermission("townypassport.issue.town.*") || player.hasPermission("townypassport.admin")) {
-            return true;
-        }
-        return player.hasPermission("townypassport.issue.town." + townName.toLowerCase())
-                || isTownOwner(player, townName);
+        return isTownOwner(player, townName);
     }
 
     public boolean canIssueNationDocuments(Player player, String nationName) {
-        if (player.hasPermission("townypassport.issue.nation.*") || player.hasPermission("townypassport.admin")) {
-            return true;
-        }
-        return player.hasPermission("townypassport.issue.nation." + nationName.toLowerCase());
+        return isNationOwner(player, nationName);
+    }
+
+    public boolean isNationOwner(Player player, String nationName) {
+        org.bukkit.OfflinePlayer leader = getNationLeader(nationName);
+        return leader != null && leader.getUniqueId().equals(player.getUniqueId());
     }
 
 
@@ -275,6 +273,29 @@ public class TownyHook {
             plugin.getLogger().warning("Failed resolving nation leader: " + ex.getMessage());
         }
         return null;
+    }
+
+    public String getCapitalTownForNation(String nationName) {
+        if (!isTownyAvailable()) {
+            return null;
+        }
+        try {
+            Class<?> townyApiClass = Class.forName("com.palmergames.bukkit.towny.TownyAPI");
+            Object api = townyApiClass.getMethod("getInstance").invoke(null);
+            Object nation = townyApiClass.getMethod("getNation", String.class).invoke(api, nationName);
+            if (nation == null) {
+                return null;
+            }
+            Object capital = nation.getClass().getMethod("getCapital").invoke(nation);
+            if (capital == null) {
+                return null;
+            }
+            Object name = capital.getClass().getMethod("getName").invoke(capital);
+            return name instanceof String ? (String) name : null;
+        } catch (ReflectiveOperationException ex) {
+            plugin.getLogger().warning("Failed resolving nation capital town: " + ex.getMessage());
+            return null;
+        }
     }
 
     private Object getTownObject(String townName) {

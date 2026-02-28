@@ -31,7 +31,7 @@ public class SpawnRestrictionListener implements Listener {
             return;
         }
 
-        if (passportService.canEnterTown(event.getPlayer().getUniqueId(), townName)) {
+        if (passportService.canAccessTown(event.getPlayer().getUniqueId(), townName)) {
             return;
         }
 
@@ -42,6 +42,6 @@ public class SpawnRestrictionListener implements Listener {
             }
         }
 
-        event.getPlayer().sendMessage(ChatColor.RED + "Spawn denied in " + townName + ": you need a valid town or nation passport.");
+        event.getPlayer().sendMessage(ChatColor.RED + "Spawn denied in " + townName + ": you need a valid town/nation passport or visa.");
     }
 }

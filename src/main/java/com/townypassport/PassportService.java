@@ -334,6 +334,32 @@ public class PassportService {
         return false;
     }
 
+    public boolean canAccessTown(UUID playerId, String townName) {
+        if (canEnterTown(playerId, townName)) {
+            return true;
+        }
+
+        String townNation = townyHook.getNationForTown(townName);
+        Instant now = Instant.now();
+        for (PassportRecord record : store.getPassports(playerId)) {
+            if (!record.isValidAt(now) || record.getDocumentType() != PassportRecord.DocumentType.VISA) {
+                continue;
+            }
+
+            if (record.getAuthorityType() == PassportRecord.AuthorityType.TOWN
+                    && record.getAuthorityName().equalsIgnoreCase(townName)) {
+                return true;
+            }
+
+            if (record.getAuthorityType() == PassportRecord.AuthorityType.NATION
+                    && townNation != null
+                    && record.getAuthorityName().equalsIgnoreCase(townNation)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean passportAllowsTownEntry(PassportRecord record, String townName, String townNation) {
         if (record.getAuthorityType() == PassportRecord.AuthorityType.TOWN) {
             return record.getAuthorityName().equalsIgnoreCase(townName);

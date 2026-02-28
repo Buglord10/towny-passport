@@ -28,12 +28,12 @@ public class BorderListener implements Listener {
             return;
         }
 
-        if (passportService.canEnterTown(event.getPlayer().getUniqueId(), toTown)) {
+        if (passportService.canAccessTown(event.getPlayer().getUniqueId(), toTown)) {
             return;
         }
 
         event.setCancelled(true);
-        event.getPlayer().sendMessage(ChatColor.RED + "Entry denied: you need a valid passport for town " + toTown
+        event.getPlayer().sendMessage(ChatColor.RED + "Entry denied: you need a valid passport or visa for town " + toTown
                 + " or its nation.");
     }
 }
