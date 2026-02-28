@@ -87,3 +87,10 @@ book-portrait:
 ```
 
 If PlaceholderAPI is not installed, the template is used literally (with `{player}` replacement only).
+
+
+## Troubleshooting Vault detection
+If TownyPassport says Vault economy is missing even though Vault is installed, it may be loading before your economy provider registers with Vault.
+
+This plugin now retries economy-provider detection for a short period on startup instead of failing immediately.
+Make sure one supported economy plugin (EssentialsX Economy, CMI, etc.) is installed alongside Vault.
