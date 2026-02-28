@@ -5,17 +5,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 
 public class TownyPassportPlugin extends JavaPlugin {
 
-    private static final int MAX_INIT_ATTEMPTS = 15;
-
     private Economy economy;
     private PassportStore passportStore;
-    private boolean initialized;
-    private int initAttempts;
-    private BukkitTask initTask;
 
     @Override
     public void onEnable() {
@@ -24,27 +18,18 @@ public class TownyPassportPlugin extends JavaPlugin {
         this.passportStore = new PassportStore(this);
         this.passportStore.load();
 
-        attemptInitialization();
-        if (!initialized) {
-            initTask = Bukkit.getScheduler().runTaskTimer(this, this::attemptInitialization, 40L, 40L);
-        }
-    }
-
-    private void attemptInitialization() {
-        if (initialized) {
+        this.economy = detectEconomyProvider();
+        boolean economyRequired = getConfig().getBoolean("economy.required", false);
+        if (economy == null && economyRequired) {
+            getLogger().severe("No Vault economy provider found and economy.required=true. Disabling plugin.");
+            Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
 
-        initAttempts++;
-        if (!setupVault()) {
-            if (initAttempts >= MAX_INIT_ATTEMPTS) {
-                getLogger().severe("Vault economy provider not found after " + initAttempts + " attempts. Disabling plugin.");
-                Bukkit.getPluginManager().disablePlugin(this);
-                return;
-            }
-
-            getLogger().warning("Vault economy provider not ready yet (attempt " + initAttempts + "/" + MAX_INIT_ATTEMPTS + "). Retrying...");
-            return;
+        if (economy == null) {
+            getLogger().warning("No Vault economy provider found. Running in no-fee mode until one is registered.");
+        } else {
+            getLogger().info("Vault economy provider detected: " + economy.getName());
         }
 
         TownyHook townyHook = new TownyHook(this);
@@ -61,23 +46,14 @@ public class TownyPassportPlugin extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new BorderListener(passportService, townyHook), this);
         Bukkit.getPluginManager().registerEvents(new StarterPassportListener(passportService), this);
+        Bukkit.getPluginManager().registerEvents(new EconomyProviderListener(this, passportService), this);
         Bukkit.getOnlinePlayers().forEach(passportService::ensureTownOwnerStarterPassport);
-
-        initialized = true;
-        if (initTask != null) {
-            initTask.cancel();
-            initTask = null;
-        }
 
         getLogger().info("TownyPassport enabled.");
     }
 
     @Override
     public void onDisable() {
-        if (initTask != null) {
-            initTask.cancel();
-            initTask = null;
-        }
         if (passportStore != null) {
             passportStore.save();
         }
@@ -92,13 +68,14 @@ public class TownyPassportPlugin extends JavaPlugin {
         command.setTabCompleter(completer);
     }
 
-    private boolean setupVault() {
+    public Economy detectEconomyProvider() {
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null || rsp.getProvider() == null) {
-            return false;
+            this.economy = null;
+            return null;
         }
 
-        economy = rsp.getProvider();
-        return true;
+        this.economy = rsp.getProvider();
+        return this.economy;
     }
 }

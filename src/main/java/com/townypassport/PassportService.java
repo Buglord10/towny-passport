@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public class PassportService {
 
     private final TownyPassportPlugin plugin;
-    private final Economy economy;
+    private Economy economy;
     private final TownyHook townyHook;
     private final PassportStore store;
 
@@ -24,6 +24,10 @@ public class PassportService {
         this.economy = economy;
         this.townyHook = townyHook;
         this.store = store;
+    }
+
+    public void updateEconomyProvider(Economy economy) {
+        this.economy = economy;
     }
 
     public PassportApplication createApplication(
@@ -240,6 +244,9 @@ public class PassportService {
 
     private boolean charge(Player player, double amount) {
         if (amount <= 0 || player == null) {
+            return true;
+        }
+        if (economy == null) {
             return true;
         }
         EconomyResponse response = economy.withdrawPlayer(player, amount);

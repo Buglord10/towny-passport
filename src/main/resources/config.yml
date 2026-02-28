@@ -1,3 +1,6 @@
+economy:
+  required: false
+
 passport-valid-days: 90
 visa-valid-days: 30
 fees:

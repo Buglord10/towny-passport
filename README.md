@@ -4,7 +4,7 @@ TownyPassport is a Paper/Spigot plugin that adds roleplay-style identity documen
 
 ## Integrations
 
-- **Vault** for charging issuance fees.
+- **Vault** for charging issuance fees (optional; plugin can run in no-fee mode if no provider is present).
 - **Towny** for validating towns/nations and enforcing border entry rules.
 - Optional: **PlaceholderAPI** for in-book portrait placeholders.
 
@@ -90,7 +90,12 @@ If PlaceholderAPI is not installed, the template is used literally (with `{playe
 
 
 ## Troubleshooting Vault detection
-If TownyPassport says Vault economy is missing even though Vault is installed, it may be loading before your economy provider registers with Vault.
+If TownyPassport starts before your economy provider registers with Vault, it now listens for Bukkit service registration and automatically picks the provider up when it appears.
 
-This plugin now retries economy-provider detection for a short period on startup instead of failing immediately.
 Make sure one supported economy plugin (EssentialsX Economy, CMI, etc.) is installed alongside Vault.
+
+
+## Economy behavior
+- If a Vault economy provider is present, configured fees are charged.
+- If no provider is found and `economy.required: false` (default), plugin still runs and treats fees as no-cost.
+- Set `economy.required: true` to force-disable startup without an economy provider.
