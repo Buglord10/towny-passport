@@ -1,0 +1,24 @@
+name: TownyPassport
+version: 1.2.1
+main: com.townypassport.TownyPassportPlugin
+api-version: '1.20'
+softdepend: [Vault, Towny, PlaceholderAPI, SkinsRestorer]
+commands:
+  townypassport:
+    description: Apply, issue, manage, and view passports
+    usage: /townypassport <apply|issue|applications|approve|view|list|search|renew|revoke|settings> ...
+    aliases: [tpassport, passport]
+  townyvisa:
+    description: Apply, issue, and approve visas
+    usage: /townyvisa <apply|issue|approve> ...
+    aliases: [tvisa, visa]
+permissions:
+  townypassport.admin:
+    description: Full administrative access
+    default: op
+  townypassport.issue.town.*:
+    description: Issue town documents for any town
+    default: op
+  townypassport.issue.nation.*:
+    description: Issue nation documents for any nation
+    default: op
