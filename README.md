@@ -26,6 +26,66 @@ TownyPassport is a Paper/Spigot plugin that adds roleplay-style identity documen
   - A **nation passport** grants access to all towns in that nation.
   - A **town passport** grants access only to that one town.
 
+## Quick Start Guide
+
+### 1) Install dependencies
+1. Put **TownyPassport** jar in your server `plugins/` folder.
+2. Install/enable **Towny** (required).
+3. Optional but recommended for fees: install **Vault** + an economy plugin (EssentialsX Economy/CMI/etc).
+4. Restart server once so default config files are generated.
+
+### 2) Configure the plugin
+Edit `plugins/TownyPassport/config.yml` and set at minimum:
+
+```yml
+economy:
+  required: false
+
+fees:
+  passport: 250
+  visa: 50
+  charge-on-approval: true
+
+passport-valid-days: 90
+visa-valid-days: 30
+```
+
+Then restart or reload the server/plugin.
+
+### 3) Typical workflow (player + authority owner)
+1. **Player applies**
+   - Passport: `/townypassport apply town MyTown 21 Male visiting`
+   - Visa: `/townyvisa apply nation MyNation 21 Male temporary-entry`
+2. **Town/Nation owner reviews pending apps**
+   - `/townypassport applications town MyTown`
+3. **Owner approves**
+   - Passport: `/townypassport approve <applicationId>`
+   - Visa: `/townyvisa approve <applicationId>`
+4. **Player checks documents**
+   - `/townypassport list`
+   - `/townypassport view`
+
+### 4) Owner controls (per town/nation)
+Owners can set their own authority pricing and validity:
+
+```text
+/townypassport settings town MyTown show
+/townypassport settings town MyTown passport-fee 300
+/townypassport settings town MyTown visa-fee 75
+/townypassport settings town MyTown passport-days 120
+/townypassport settings town MyTown visa-days 45
+```
+
+### 5) Enforcement behavior
+- Entering or teleporting into towns without valid passport/visa access triggers an automatic eject teleport with a warning.
+- `/t spawn` and `/n spawn` are blocked without valid access.
+- Respawning inside a town is blocked (or redirected to world spawn if enabled) without valid access.
+
+### 6) Common checks
+- If fees are not charging, ensure Vault + economy provider are both installed and loaded.
+- If Towny commands still teleport, verify TownyPassport is enabled and no plugin is cancelling command events earlier.
+- Use namespaced commands (`/townypassport`, `/townyvisa`) to avoid command conflicts.
+
 ## Commands
 
 ### Passport
